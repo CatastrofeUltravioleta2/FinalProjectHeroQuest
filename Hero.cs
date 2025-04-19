@@ -3,7 +3,7 @@ public class Hero
     public int Strenght {get;set;}
     public int Agility {get;set;}
     public int Intelligence {get;set;}
-    public int Health {get;}
+    public int Health {get;set;}
     public Queue<Item> Inventory {get;set;} 
     public int InventoryMaxSize {get; set;}
 
@@ -15,8 +15,8 @@ public class Hero
         Health = 20;
 
         Inventory = new Queue<Item>();
-        Inventory.Enqueue(Item.Sword);
         Inventory.Enqueue(Item.HealthPotion);
+        Inventory.Enqueue(Item.Sword);
 
         InventoryMaxSize = 5;
     }
@@ -32,6 +32,12 @@ public class Hero
         System.Console.WriteLine($"{item} added to the inventory");
     }
 
+    public void PrintHeroStatus()
+    {
+        System.Console.WriteLine($"Hero has: Health {Health} / Strenght {Strenght} / Agility {Agility} / Intelligence {Intelligence}");
+        System.Console.WriteLine($"Inventory: {string.Join("; ", Inventory)}");
+    }
+
 }
 
-public enum Item {Sword, HealthPotion, Lockpick, None}
+public enum Item {Sword, Lockpick, WisdomBook, Teleport, SpeedBoots, Shield, HealthPotion, None}

@@ -1,4 +1,8 @@
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
+
+public record Room(int Id, bool Treasure = false);
+
 public class Map
 {
     public class Edge
@@ -19,17 +23,17 @@ public class Map
         }
 
     }
-    public record Room(int Id, bool Treasure = false);
 
     public Dictionary<Room, List<Edge>> Graph { get; set; }
     public Dictionary<int, Room> RoomData { get; set; }
     public Room ExitRoom { get; set; }
+    Random random = new Random();
 
     public Map()
     {
         Graph = new Dictionary<Room, List<Edge>>();
         RoomData = new Dictionary<int, Room>();
-        GenerateRandomMap(15);
+        GenerateRandomMap(20);
 
     }
 
@@ -138,7 +142,6 @@ public class Map
 
     public void GenerateRandomMap(int mapSize)
     {
-        Random random = new Random();
         List<int> pathOptions = new List<int>();
 
         //generate all rooms
@@ -165,7 +168,15 @@ public class Map
         ExitRoom = RoomData[path.Last()];
         for (int i = 1; i < path.Count; i++)
         {
-            AddPath(RoomData[path[i - 1]], new Edge(RoomData[path[i]], 0, 0, 0, Item.None));
+            if (path[i - 1] == 0)
+            {
+                AddPath(RoomData[path[i - 1]], new Edge(RoomData[path[i]], 0, 0, 0, Item.None));
+            }
+            else
+            {
+                (int Str, int Agi, int Int, Item It) = GenerateRandomValuesForEdges(path[i]);
+                AddPath(RoomData[path[i - 1]], new Edge(RoomData[path[i]], Str, Agi, Int, It));
+            }
         }
         System.Console.WriteLine();
 
@@ -177,9 +188,79 @@ public class Map
             {
                 List<int> roomsAvailableToAdd = RoomData.Keys.Where(id => id != room.Id && ExitRoom.Id != id && Graph[room].All(e => e.To.Id != id)).ToList();
                 int randomRoom = random.Next(1, roomsAvailableToAdd.Count);
-                AddPath(room, new Edge(RoomData[roomsAvailableToAdd[randomRoom]], 0, 0, 0, Item.None));
+                (int Str, int Agi, int Int, Item It) = GenerateRandomValuesForEdges(roomsAvailableToAdd[randomRoom]);
+                AddPath(room, new Edge(RoomData[roomsAvailableToAdd[randomRoom]], Str, Agi, Int, It));
                 roomsAvailableToAdd.Remove(roomsAvailableToAdd[randomRoom]);
             }
         }
+    }
+
+    public (int, int, int, Item) GenerateRandomValuesForEdges(int roomId)
+    {
+        int statChoice = random.Next(3);
+
+        double roomValueMultiplier = roomId / 19.0;
+        int lowerStatBound = (int)(roomValueMultiplier * 10);
+        int upperStatBound = 2 + lowerStatBound;
+
+        int statValue = random.Next(lowerStatBound, upperStatBound + 1);
+        int StrRequired = 0;
+        int IntRequired = 0;
+        int AgRequired = 0;
+        switch (statChoice)
+        {
+            case 0: StrRequired = statValue; break;
+            case 1: IntRequired = statValue; break;
+            case 2: AgRequired = statValue; break;
+        }
+        Item ItemRequired = (Item)random.Next(6);
+        return (StrRequired, AgRequired, IntRequired, ItemRequired);
+    }
+
+    public List<Room>? FindShortestPathFromNode(Room start, Room end)
+    {
+        if (!Graph.ContainsKey(start) || !Graph.ContainsKey(end))
+            return null;
+
+        Queue<Room> queue = new Queue<Room>();
+        Dictionary<Room, Room> previousRoom = new Dictionary<Room, Room>();
+        List<Room> visitedRooms = new List<Room>();
+
+        queue.Enqueue(start);
+        visitedRooms.Add(start);
+        bool foundPath = false;
+
+        while (queue.Count > 0)
+        {
+            var currentRoom = queue.Dequeue();
+            if (currentRoom.Id == end.Id)
+            {
+                foundPath = true;
+                break;
+            }
+
+            foreach (var edge in Graph[currentRoom])
+            {
+                if (!visitedRooms.Contains(edge.To))
+                {
+                    visitedRooms.Add(edge.To);
+                    previousRoom[edge.To] = currentRoom;
+                    queue.Enqueue(edge.To);
+                }
+            }
+        }
+
+        if (!foundPath) return null;
+
+        List<Room> shortestPath = new List<Room>();
+        Room room = end;
+        while (room.Id != start.Id)
+        {
+            shortestPath.Add(room);
+            room = previousRoom[room];
+        }
+        shortestPath.Add(start);
+        shortestPath.Reverse();
+        return shortestPath;
     }
 }
