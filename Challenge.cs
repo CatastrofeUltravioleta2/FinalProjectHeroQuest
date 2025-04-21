@@ -17,7 +17,7 @@ public class Challenge
 
     public override string ToString()
     {
-        return $"Challenge Name: {Name} / Difficulty: {Difficulty} / Requirements: {ItemRequirement} or {StatRequired} > {StatRequirement}";
+        return $"Challenge Name: {Name} / Difficulty: {Difficulty} / Requirements: {ItemRequirement} or {StatRequired} >= {StatRequirement}";
     }
 }
 
@@ -137,6 +137,7 @@ public class ChallengeBST
     }
     private Node BalanceTree(Node node)
     {
+        //AVL tree to self balance the tree. I selected this method because it is not that hard to implement and rotations are O(1)
         int balanceFactor = balancingFactor(node);
 
         //LL
@@ -258,34 +259,6 @@ public class ChallengeBST
             return SearchLogic(node.Left, searchDifficulty);
         else
             return SearchLogic(node.Right, searchDifficulty);
-    }
-
-    public void DisplayTree()
-    {
-        DisplayTree(Root, "", true);
-        System.Console.WriteLine();
-    }
-
-    private void DisplayTree(Node node, string indent, bool isLast)
-    {
-        if (node != null)
-        {
-            Console.Write(indent);
-            if (isLast)
-            {
-                Console.Write("|__");
-                indent += "    ";
-            }
-            else
-            {
-                Console.Write("├──");
-                indent += "│   ";
-            }
-            Console.WriteLine(node.Data.Difficulty);
-
-            DisplayTree(node.Left, indent, false);
-            DisplayTree(node.Right, indent, true);
-        }
     }
 
     private void AddChallenges()

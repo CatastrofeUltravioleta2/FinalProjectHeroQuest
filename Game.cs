@@ -7,6 +7,7 @@ public class Game
     private Stack<Treasures> treasuresStack { get; set; }
     private Stack<int> roomHistory;
     public int currentRoomId = 0;
+    private List<int> hasHeroTraveledToRoom { get; set; }
     Random random = new Random();
 
     public Game(Map map, ChallengeBST challenges)
@@ -14,6 +15,7 @@ public class Game
         hero = new Hero(5, 5, 5);
         this.map = map;
         this.challenges = challenges;
+        hasHeroTraveledToRoom = new List<int>();
         treasuresStack = new Stack<Treasures>();
         roomHistory = new Stack<int>();
     }
@@ -24,13 +26,19 @@ public class Game
         hero.PrintHeroStatus();
         Room currentRoom = map.RoomData[currentRoomId];
 
-        //consume Health Potion
-        if(hero.Health <= 10)
+        //Use Treasure
+        if (treasuresStack.Count > 0 && ReceiveUserChoice<string>(new List<string> { "Yes", "No" }, "Do you wish to use a treasure?") == 0)
         {
-            if(hero.Inventory.Contains(Item.HealthPotion))
+            UseTreasure();
+        }
+
+        //consume Health Potion
+        if (hero.Health <= 10)
+        {
+            if (hero.Inventory.Contains(Item.HealthPotion))
             {
                 var keepItems = hero.Inventory.Where(i => i == Item.HealthPotion).ToList();
-                foreach(var item in keepItems)
+                foreach (var item in keepItems)
                 {
                     hero.Inventory = new Queue<Item>();
                     hero.Inventory.Enqueue(item);
@@ -41,7 +49,7 @@ public class Game
         }
 
         //treasaure
-        if (currentRoom.Treasure)
+        if (currentRoom.Treasure && !hasHeroTraveledToRoom.Contains(currentRoomId))
         {
             System.Console.WriteLine("The current room has a treasure");
             int treasureOrItem = random.Next(2);
@@ -50,7 +58,7 @@ public class Game
                 Treasures treasureFound = (Treasures)random.Next(3);
                 System.Console.WriteLine($"You have received a treasure: {treasureFound}");
                 treasuresStack.Push(treasureFound);
-                if (ReceiveUserChoice<string>(new List<string> { "Yes", "No" }, "Do you wish to user the treasure?") == 0)
+                if (ReceiveUserChoice<string>(new List<string> { "Yes", "No" }, "Do you wish to use the treasure?") == 0)
                 {
                     UseTreasure();
                 }
@@ -61,59 +69,61 @@ public class Game
                 System.Console.WriteLine($"You have found an Item {itemFound}");
                 hero.AddItem(itemFound);
             }
+
         }
 
         //challenge
-        Challenge currentRoomChallenge = challenges.FindClosestChallenge(currentRoomId);
-        System.Console.WriteLine($"Challenge for this room: {currentRoomChallenge}");
+        if (!hasHeroTraveledToRoom.Contains(currentRoomId))
+        {
+            Challenge currentRoomChallenge = challenges.FindClosestChallenge(currentRoomId);
+            System.Console.WriteLine($"Challenge for this room: {currentRoomChallenge}");
 
-        int DifferenceInStats = 0;
-        bool challengePassed = false;
-        if (currentRoomChallenge.StatRequired == "Strenght")
-        {
-            if (hero.Strenght >= currentRoomChallenge.StatRequirement || hero.Inventory.Contains(currentRoomChallenge.ItemRequirement))
-                challengePassed = true;
-            else
-                DifferenceInStats = currentRoomChallenge.StatRequirement - hero.Strenght;
-        }
-        else if (currentRoomChallenge.StatRequired == "Intelligence")
-        {
-            if (hero.Intelligence >= currentRoomChallenge.StatRequirement || hero.Inventory.Contains(currentRoomChallenge.ItemRequirement))
-                challengePassed = true;
-            else
-                DifferenceInStats = currentRoomChallenge.StatRequirement - hero.Intelligence;
-        }
-        else if (currentRoomChallenge.StatRequired == "Agility")
-        {
-            if (hero.Agility >= currentRoomChallenge.StatRequirement || hero.Inventory.Contains(currentRoomChallenge.ItemRequirement))
-                challengePassed = true;
-            else
-                DifferenceInStats = currentRoomChallenge.StatRequirement - hero.Agility;
-        }
+            int DifferenceInStats = 0;
+            bool challengePassed = false;
+            if (currentRoomChallenge.StatRequired == "Strenght")
+            {
+                if (hero.Strenght >= currentRoomChallenge.StatRequirement || hero.Inventory.Contains(currentRoomChallenge.ItemRequirement))
+                    challengePassed = true;
+                else
+                    DifferenceInStats = currentRoomChallenge.StatRequirement - hero.Strenght;
+            }
+            else if (currentRoomChallenge.StatRequired == "Intelligence")
+            {
+                if (hero.Intelligence >= currentRoomChallenge.StatRequirement || hero.Inventory.Contains(currentRoomChallenge.ItemRequirement))
+                    challengePassed = true;
+                else
+                    DifferenceInStats = currentRoomChallenge.StatRequirement - hero.Intelligence;
+            }
+            else if (currentRoomChallenge.StatRequired == "Agility")
+            {
+                if (hero.Agility >= currentRoomChallenge.StatRequirement || hero.Inventory.Contains(currentRoomChallenge.ItemRequirement))
+                    challengePassed = true;
+                else
+                    DifferenceInStats = currentRoomChallenge.StatRequirement - hero.Agility;
+            }
 
-        if (challengePassed)
-        {
-            System.Console.WriteLine("Challenge Completed");
-            challenges.Delete(currentRoomChallenge.Difficulty);
-        }
-        else
-        {
-            System.Console.WriteLine($"You failed the challenge. you lost {DifferenceInStats} health");
-            hero.Health -= DifferenceInStats;
-            if (hero.Health < 0) hero.Health = 0;
+            if (challengePassed)
+            {
+                System.Console.WriteLine("Challenge Completed");
+                challenges.Delete(currentRoomChallenge.Difficulty);
+            }
+            else
+            {
+                System.Console.WriteLine($"You failed the challenge. you lost {DifferenceInStats} health");
+                hero.Health -= DifferenceInStats;
+                if (hero.Health < 0) hero.Health = 0;
+            }
+
         }
 
         //win condition
-        if (currentRoom == map.ExitRoom && hero.Health > 0)
-        {
-            System.Console.WriteLine("Congratulations you completed the maze and spaced succesfully");
-            System.Environment.Exit(0);
-        }
-        CheckLoseConditions(currentRoom);
+        CheckWinCondition(currentRoom);
 
         //navigation
         var edges = map.Graph[currentRoom];
+        hasHeroTraveledToRoom.Add(currentRoomId);
         map.DisplayPaths(currentRoom);
+        
         var availableRooms = edges.Where(e =>
             (hero.Strenght >= e.RequiredStrenght &&
             hero.Intelligence >= e.RequiredIntelligence &&
@@ -131,7 +141,7 @@ public class Game
         }
         else
         {
-            if(roomHistory.Count > 0)
+            if (roomHistory.Count > 0)
             {
                 int previousRoomId = roomHistory.Pop();
                 System.Console.WriteLine($"There are no available. Going back to previous room: {previousRoomId}");
@@ -177,7 +187,7 @@ public class Game
 
     public int ReceiveUserChoice<T>(List<T> options, string prompt)
     {
-        int lines = 1 + options.Count + 1;
+        int lines = 1 + options.Count;
         int startLine;
         while (true)
         {
@@ -194,7 +204,7 @@ public class Game
                 return index;
             }
 
-            for (int i = 0; i < lines; i++)
+            for (int i = 0; i < lines ; i++)
             {
                 Console.SetCursorPosition(0, startLine + i);
                 System.Console.Write(new string(' ', Console.BufferWidth));
@@ -202,9 +212,14 @@ public class Game
             Console.SetCursorPosition(0, startLine);
         }
     }
-    public void CheckLoseConditions(Room currentRoom)
+    public void CheckWinCondition(Room currentRoom)
     {
         bool lost = false;
+        if (currentRoom == map.ExitRoom && hero.Health > 0)
+        {
+            System.Console.WriteLine("Congratulations you completed the maze and spaced succesfully");
+            System.Environment.Exit(0);
+        }
         if (hero.Health <= 0)
         {
             System.Console.WriteLine("You have lost all you health");

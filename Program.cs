@@ -4,10 +4,14 @@
     {
         Map map = new Map();
         ChallengeBST challenges = new ChallengeBST();
-        challenges.DisplayTree();
 
         Game game = new Game(map, challenges);
         map.displayWholeMap();
+        System.Console.WriteLine("ShortestPath");
+        foreach(var i in map.FindShortestPathFromNode(map.RoomData[0], map.ExitRoom))
+        {
+            System.Console.WriteLine(i);
+        }
         System.Console.WriteLine();
         while(true)
         {

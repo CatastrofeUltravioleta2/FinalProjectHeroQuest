@@ -47,7 +47,7 @@ public class Map
 
         Graph[room] = new List<Edge>();
         RoomData[room.Id] = room;
-        System.Console.WriteLine($"{room} has been added");
+        //System.Console.WriteLine($"{room} has been added");
     }
 
     public void RemoveRoom(Room room)
@@ -80,7 +80,7 @@ public class Map
             return;
         }
         Graph[from].Add(to);
-        System.Console.WriteLine($"Path added from {from} to {to.To}");
+        //System.Console.WriteLine($"Path added from {from} to {to.To}");
     }
 
     public void RemovePath(Room from, Room to)
@@ -151,7 +151,7 @@ public class Map
             pathOptions.Add(i);
         }
 
-        //generate a random path from 0 to a random room and that is the path to the exit
+        //generate a random path from 0 to a random room and that is the path to the exit. That path has a random lenght from 10 to 12
         List<int> path = new List<int>();
         int pathDistance = random.Next(10, 13);
 
@@ -165,6 +165,7 @@ public class Map
             pathOptions.Remove(pathOptions[nextRoom]);
         }
 
+        //Add edges of that path to the exit
         ExitRoom = RoomData[path.Last()];
         for (int i = 1; i < path.Count; i++)
         {
@@ -175,7 +176,7 @@ public class Map
             else
             {
                 (int Str, int Agi, int Int, Item It) = GenerateRandomValuesForEdges(path[i]);
-                AddPath(RoomData[path[i - 1]], new Edge(RoomData[path[i]], Str, Agi, Int, It));
+                AddPath(RoomData[path[i - 1]], new Edge(RoomData[path[i]], Str / 2, Agi / 2, Int / 2, It));
             }
         }
         System.Console.WriteLine();
@@ -183,14 +184,30 @@ public class Map
         //generate extra rooms
         foreach (var room in RoomData.Values)
         {
-            int randomNumberOfEdges = random.Next(1, 3);
+            int randomNumberOfEdges = random.Next(1, 3); //generates a random number from 1 to 2 edges for each room
             for (int i = 0; i < randomNumberOfEdges; i++)
             {
-                List<int> roomsAvailableToAdd = RoomData.Keys.Where(id => id != room.Id && ExitRoom.Id != id && Graph[room].All(e => e.To.Id != id)).ToList();
+                //available rooms avoid itseld and the exit room
+                List<int> roomsAvailableToAdd = RoomData.Keys
+                    .Where(id => id != room.Id && ExitRoom.Id != id && Graph[room]
+                    .All(e => e.To.Id != id))
+                    .ToList();
+                if (roomsAvailableToAdd.Count == 0) break;
+
                 int randomRoom = random.Next(1, roomsAvailableToAdd.Count);
+                int targetId = roomsAvailableToAdd[randomRoom];
+
+                //Code to avoid shortcuts. If current room and the randomly generated room are on the exit path, they can only be assigned a connection if it goes from higher to lower
+                if (path.Contains(targetId) && path.Contains(room.Id) && (path.IndexOf(room.Id) - path.IndexOf(targetId)) < 0)
+                    continue;
+                //if random room is in the path, don't allow to create the connection if it is less than 5 rooms from the exit
+                if (path.Contains(targetId) && FindShortestPathFromNode(RoomData[targetId], ExitRoom).Count < 5)
+                    continue;
+
                 (int Str, int Agi, int Int, Item It) = GenerateRandomValuesForEdges(roomsAvailableToAdd[randomRoom]);
-                AddPath(room, new Edge(RoomData[roomsAvailableToAdd[randomRoom]], Str, Agi, Int, It));
-                roomsAvailableToAdd.Remove(roomsAvailableToAdd[randomRoom]);
+                AddPath(room, new Edge(RoomData[targetId], Str, Agi, Int, It));
+
+                roomsAvailableToAdd.Remove(targetId);
             }
         }
     }
@@ -226,6 +243,7 @@ public class Map
         Dictionary<Room, Room> previousRoom = new Dictionary<Room, Room>();
         List<Room> visitedRooms = new List<Room>();
 
+        //User BST to find the shortest path from the start room to the end room
         queue.Enqueue(start);
         visitedRooms.Add(start);
         bool foundPath = false;
