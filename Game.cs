@@ -22,6 +22,7 @@ public class Game
 
     public void Play()
     {
+        System.Console.WriteLine("-------------------------------------------------------------------");
         System.Console.WriteLine($"Entering Room {currentRoomId}");
         hero.PrintHeroStatus();
         Room currentRoom = map.RoomData[currentRoomId];
@@ -123,7 +124,7 @@ public class Game
         var edges = map.Graph[currentRoom];
         hasHeroTraveledToRoom.Add(currentRoomId);
         map.DisplayPaths(currentRoom);
-        
+
         var availableRooms = edges.Where(e =>
             (hero.Strenght >= e.RequiredStrenght &&
             hero.Intelligence >= e.RequiredIntelligence &&
@@ -134,7 +135,7 @@ public class Game
         if (availableRooms.Count > 0)
         {
 
-            int nextRoomId = availableRooms[ReceiveUserChoice(availableRooms.Select(e => $"Room Id: {e.To.Id}").ToList(), "Choose your next room")].To.Id;
+            int nextRoomId = availableRooms[ReceiveUserChoice(availableRooms.Select(e => $"Room Id: {e.To.Id}").ToList(), "Choose your next room / Enter index of option")].To.Id;
 
             roomHistory.Push(currentRoomId);
             currentRoomId = nextRoomId;
@@ -204,10 +205,14 @@ public class Game
                 return index;
             }
 
-            for (int i = 0; i < lines ; i++)
+            for (int i = 0; i < lines; i++)
             {
-                Console.SetCursorPosition(0, startLine + i);
-                System.Console.Write(new string(' ', Console.BufferWidth));
+                try
+                {
+                    Console.SetCursorPosition(0, startLine + i);
+                    System.Console.Write(new string(' ', Console.BufferWidth));
+                }
+                catch{}
             }
             Console.SetCursorPosition(0, startLine);
         }

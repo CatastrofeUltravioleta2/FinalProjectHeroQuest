@@ -41,7 +41,7 @@ public class Map
     {
         if (Graph.ContainsKey(room))
         {
-            System.Console.WriteLine($"{room} already exists");
+            //System.Console.WriteLine($"{room} already exists");
             return;
         }
 
@@ -54,7 +54,7 @@ public class Map
     {
         if (!Graph.ContainsKey(room))
         {
-            System.Console.WriteLine($"{room} does not exist");
+            //System.Console.WriteLine($"{room} does not exist");
             return;
         }
 
@@ -64,19 +64,19 @@ public class Map
         {
             Graph[roomInGraph].RemoveAll(e => e.To == room);
         }
-        System.Console.WriteLine($"{room} removed from graph");
+        //System.Console.WriteLine($"{room} removed from graph");
     }
 
     public void AddPath(Room from, Edge to)
     {
         if (!Graph.ContainsKey(from) || !Graph.ContainsKey(to.To))
         {
-            System.Console.WriteLine($"One or both rooms do not exist");
+            //System.Console.WriteLine($"One or both rooms do not exist");
             return;
         }
         if (Graph[from].FirstOrDefault(e => e.To == to.To) is not null)
         {
-            System.Console.WriteLine($"There is already a path between {from} and {to.To}");
+            //System.Console.WriteLine($"There is already a path between {from} and {to.To}");
             return;
         }
         Graph[from].Add(to);
@@ -87,29 +87,29 @@ public class Map
     {
         if (!Graph.ContainsKey(from) || !Graph.ContainsKey(to))
         {
-            System.Console.WriteLine($"One or both rooms do not exist");
+            //System.Console.WriteLine($"One or both rooms do not exist");
             return;
         }
         if (Graph[from].FirstOrDefault(e => e.To == to) is null)
         {
-            System.Console.WriteLine($"There is no path between {from} and {to}");
+            //System.Console.WriteLine($"There is no path between {from} and {to}");
             return;
         }
 
         Graph[from].RemoveAt(Graph[from].FindIndex(e => e.To == to));
-        System.Console.WriteLine($"Path removed from {from} to {to}");
+        //System.Console.WriteLine($"Path removed from {from} to {to}");
     }
 
     public void DisplayPaths(Room room)
     {
         if (!Graph.ContainsKey(room))
         {
-            System.Console.WriteLine($"{room} does not exist.");
+            //System.Console.WriteLine($"{room} does not exist.");
             return;
         }
         if (Graph[room].Count == 0)
         {
-            System.Console.WriteLine($"{room} has no paths.");
+            //System.Console.WriteLine($"{room} has no paths.");
             return;
         }
 
@@ -176,7 +176,7 @@ public class Map
             else
             {
                 (int Str, int Agi, int Int, Item It) = GenerateRandomValuesForEdges(path[i]);
-                AddPath(RoomData[path[i - 1]], new Edge(RoomData[path[i]], Str / 2, Agi / 2, Int / 2, It));
+                AddPath(RoomData[path[i - 1]], new Edge(RoomData[path[i]], Str / 4, Agi / 4, Int / 4, It));
             }
         }
         System.Console.WriteLine();

@@ -48,7 +48,7 @@ public class ChallengeBST
     public void Insert(Challenge challenge)
     {
         Root = InsertLogic(Root, challenge);
-        System.Console.WriteLine($"Challenge added {challenge}");
+        //System.Console.WriteLine($"Challenge added {challenge}");
     }
     private Node InsertLogic(Node node, Challenge challenge)
     {
@@ -196,9 +196,9 @@ public class ChallengeBST
 
     public void DisplayChallenges()
     {
-        System.Console.WriteLine("Display Challenges");
+        //System.Console.WriteLine("Display Challenges");
         InOrderTraversal(Root);
-        System.Console.WriteLine();
+        //System.Console.WriteLine();
 
     }
 
@@ -207,7 +207,7 @@ public class ChallengeBST
         if (node != null)
         {
             InOrderTraversal(node.Left);
-            System.Console.WriteLine(node.Data);
+            //ystem.Console.WriteLine(node.Data);
             InOrderTraversal(node.Right);
         }
     }
